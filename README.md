@@ -8,10 +8,11 @@
 ChatGPT
 
 ## How to initialize/run your application (where applicable)
-python ten_thousand/game_logic.py
+python ten_thousand/game.py
 
 ## How to use your library (where applicable)
 N/A
 
 ## Tests
 pytest
+Manual sim test

@@ -1,5 +1,9 @@
-from game_logic import GameLogic
-import re
+if __name__ == "__main__":
+    from game_logic import GameLogic
+else:
+    import sys
+    sys.path.append('../ten-thousand/ten_thousand')
+    from game_logic import GameLogic
 
 current_round = 0
 total_score = 0
@@ -10,10 +14,10 @@ roll_score = 0
 game_status = True
 dice_saved = []
 round_status = True
+hot_dice = False
 
 
 def play():
-
     # print(f'total_score: {total_score}')
     # print(f'Current Round: {current_round}')
     def intro():
@@ -50,48 +54,90 @@ def play():
         global game_status
         global dice_saved
         global round_status
+        global hot_dice
         print(f'Rolling {dice} dice...')
-        # zero out the unbanked score
-        # set dice to roll to 6
+
         # roll the dice
         dice_rolled = GameLogic.roll_dice(dice)
+
+        # test dice input
+        # dice_rolled = (2, 3, 1, 3, 1, 2)
+
         # Format the string later
         dice_rolled_string = str(dice_rolled[0])
         if len(dice_rolled) >= 2:
             for di in range(1, len(dice_rolled)):
                 dice_rolled_string += ', ' + str(dice_rolled[di])
-        print(f'*** {dice_rolled_string} ***')
+
+        # Zilch out all 6 dice
         roll_score = GameLogic.calculate_score(dice_rolled)
-        # print(roll_score)
+        hot_dice = GameLogic.check_hot_dice(dice_rolled)
+
+
         # roll_score = 0
         if roll_score == 0:
-            print(f"This round you've earned 0 points. Total score is {total_score}. Starting next round!")
+            print(f'*** {dice_rolled_string} ***')
+            print('****************************************')
+            print('**        Zilch!!! Round over         **')
+            print('****************************************')
+            print(f"You banked 0 points in round {current_round}")
+            print(f"Total score is {total_score}.")
             round_status = False
             return
-        print('Enter dice to keep, or (q)uit:')
-        user_input = input('> ')
-        if user_input == 'q':
-            print(f'Thanks for playing. You earned {total_score} points.')
-            game_status = False
-            round_status = False
-            return
-        # else dice to keep, adjust dice to roll and update unbanked points, roll then prompt
-        user_input = string_to_list(user_input)
-        user_dice_count = count_dice(user_input)
-        rolled_dice_count = count_dice(dice_rolled)
-        valid_data = True
-        for di_value in range(1, 7):
-            if user_dice_count[di_value] > rolled_dice_count[di_value] or len(user_input) == 0:
-                valid_data = False
-                print('Bad Input, Game Over!')
+
+        # Dice to Keep
+        valid_data = False
+
+        while valid_data is False:
+            print(f'*** {dice_rolled_string} ***')
+            print('Enter dice to keep, or (q)uit:')
+            user_input = input('> ')
+            if user_input == 'q':
+                print(f'Thanks for playing. You earned {total_score} points.')
                 game_status = False
                 round_status = False
                 return
+            # else dice to keep, adjust dice to roll and update unbanked points, roll then prompt
+
+            # Check for valid data
+            user_input = string_to_list(user_input)
+            user_dice_count = count_dice(user_input) # convert to dict
+            rolled_dice_count = count_dice(dice_rolled) # convert to dict
+
+            valid_data = True
+
+            print(type(user_input)) # list of dice user wants to keep
+            print(type(dice_rolled)) # tuple of full roll
+
+            for di_value in range(1, 7):
+                if user_dice_count[di_value] > rolled_dice_count[di_value] or len(user_input) == 0:
+                    valid_data = False
+
+            if valid_data is False:
+                print('Cheater!!! Or possibly made a typo...')
+
+
         dice_saved = dice_saved + user_input
         dice -= len(user_input)
+
+        # Zilch out after dice are kept
         roll_score = GameLogic.calculate_score(user_input)
+        hot_dice = GameLogic.check_hot_dice(user_input)
+
         if roll_score == 0:
+            print('****************************************')
+            print('**        Zilch!!! Round over         **')
+            print('****************************************')
             round_status = False
+
+        # Check for hot dice (6 scoring dice)
+        if hot_dice and len(user_input) == len(dice_rolled):
+            dice = 6
+            print(f'Hot dice: {hot_dice}')
+
+
+
+
         unbanked_score += roll_score
         print(f"You have {unbanked_score} unbanked points and {dice} dice remaining")
         print('(r)oll again, (b)ank your points or (q)uit:')

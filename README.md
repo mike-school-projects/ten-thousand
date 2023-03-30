@@ -1,4 +1,4 @@
-# LAB - Class 06
+# LAB - Class 09
 
 ## Project: Ten Thousand
 
@@ -23,3 +23,21 @@ N/A
 ## Tests
 pytest
 Manual sim test passed
+<hr>
+
+## Class 09
+
+### LAB - Class 09
+
+### Description
+
+### How to initialize/run your application (where applicable)
+bots.py
+
+### How to use your library (where applicable)
+N/A
+
+### Tests
+Created a bot_of_bots to test best number value for varying dice remaining.
+Manual test to check numbers
+

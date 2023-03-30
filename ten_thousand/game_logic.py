@@ -1,379 +1,104 @@
 from collections import Counter
-import random
+from random import randint
+
 
 class GameLogic:
-    # Bulk of this code from ChatGPT
+    @staticmethod
+    def roll_dice(num=6):
+        # version_1
+
+        return tuple([randint(1, 6) for _ in range(num)])
+
     @staticmethod
     def calculate_score(dice):
         """
-        Calculate the score based on the given list of dice.
-
-        Args:
-            dice (list[int]): A list of integers representing the values of the dice.
-
-        Returns:
-            int: The total score for the given dice.
+        dice is a tuple of integers that represent the user's selected dice pulled out from current roll
         """
+        # version_1
 
-        # change input to list
-        dice_list = list(dice)
+        if len(dice) > 6:
+            raise Exception("Cheating Cheater!")
 
-        # initialize variables
-        hot_dice = False
-        ones_and_fives_needed_for_hot_dice = len(dice)
+        counts = Counter(dice)
+
+        if len(counts) == 6:
+            return 1500
+
+        if len(counts) == 3 and all(val == 2 for val in counts.values()):
+            return 1500
+
         score = 0
-        count_1_5 = 0
-        scoring_dice = list()
 
-        # Handle the case where the dice list is empty.
-        if not dice_list:
-            return score
+        ones_used = fives_used = False
 
-        # Check for a straight.
-        if set(dice_list) == {1, 2, 3, 4, 5, 6}:
-            hot_dice = True
-            scoring_dice = dice_list
-            return 1500
+        for num in range(1, 6 + 1):
 
-        # Check for three pairs.  Counts how many of each result there is.
-        # 3 pairs occurs if the count is 2 (i.e. pairs), and the length is 3 (i.e. 3 pairs)
-        value_counts = Counter(dice_list)
-        if len(value_counts) == 3 and all(count == 2 for count in value_counts.values()):
-            # score += 1500
-            hot_dice = True
-            scoring_dice = dice_list
-            return 1500
+            pip_count = counts[num]
 
-        # Check for three-of-a-kind or higher.
-        # iterate through dice_list for each value.  Count how many there are.
-        for value in set(dice_list):
-            count = dice_list.count(value)
-            base_score = 0
+            if pip_count >= 3:
 
-            # Check for 3 of a kind or greater
-            if count >= 3:
-                scoring_dice.append(value)
-                scoring_dice.append(value)
-                scoring_dice.append(value)
+                if num == 1:
 
-                # Calculate base_score for 3 of a kind
-                if value == 1:
-                    base_score = 1000
-                    ones_and_fives_needed_for_hot_dice -= 3
+                    ones_used = True
 
-                else:
-                    base_score = 100 * value
+                elif num == 5:
 
-                if value == 5:
-                    ones_and_fives_needed_for_hot_dice -= 3
+                    fives_used = True
 
-                # Check for 4 of a kind
-                if count == 4:
-                    base_score = base_score * 2
-                    ones_and_fives_needed_for_hot_dice -= 4
-                    scoring_dice.append(value)
+                score += num * 100
 
-                # Check for 5 of a kind
-                elif count == 5:
-                    base_score = base_score * 3
-                    ones_and_fives_needed_for_hot_dice -= 5
-                    scoring_dice.append(value)
-                    scoring_dice.append(value)
+                # handle 4,5,6 of a kind
+                pips_beyond_3 = pip_count - 3
 
-                elif count == 6:
-                    base_score = base_score * 4
-                    hot_dice = True
-                    scoring_dice = dice_list
+                score += score * pips_beyond_3
 
-                # Add to total score
-                score += base_score
+                # bug if 2 threesomes? Let's test it
 
-                # After scoring the value, remove it from the list of dice and repeat loop
-                for i in range(count):
-                    dice_list.remove(value)
+                # 1s are worth 10x
+                if num == 1:
+                    score *= 10
 
-        for value in dice_list:
-            if value == 1:
-                score += 100
-                count_1_5 += 1
-                scoring_dice.append(value)
-            elif value == 5:
-                score += 50
-                count_1_5 += 1
-                scoring_dice.append(value)
+        if not ones_used:
+            score += counts.get(1, 0) * 100
 
-        # Compare to number of 1' and 5's needed for hot dice
-        if ones_and_fives_needed_for_hot_dice == count_1_5:
-            hot_dice = True
+        if not fives_used:
+            score += counts.get(5, 0) * 50
 
         return score
 
-    def check_hot_dice(dice):
-        """
-        Calculate the score based on the given list of dice.
-
-        Args:
-            dice (list[int]): A list of integers representing the values of the dice.
-
-        Returns:
-            int: The total score for the given dice.
-        """
-
-        # change input to list
-        dice_list = list(dice)
-
-        # initialize variables
-        hot_dice = False
-        ones_and_fives_needed_for_hot_dice = len(dice)
-        score = 0
-        count_1_5 = 0
-        scoring_dice = list()
-
-        # Handle the case where the dice list is empty.
-        if not dice_list:
-            return hot_dice
-
-        # Check for a straight.
-        if set(dice_list) == {1, 2, 3, 4, 5, 6}:
-            hot_dice = True
-            scoring_dice = dice_list
-            return hot_dice
-
-        # Check for three pairs.  Counts how many of each result there is.
-        # 3 pairs occurs if the count is 2 (i.e. pairs), and the length is 3 (i.e. 3 pairs)
-        value_counts = Counter(dice_list)
-        if len(value_counts) == 3 and all(count == 2 for count in value_counts.values()):
-            # score += 1500
-            hot_dice = True
-            scoring_dice = dice_list
-            return hot_dice
-
-        # Check for three-of-a-kind or higher.
-        # iterate through dice_list for each value.  Count how many there are.
-        for value in set(dice_list):
-            count = dice_list.count(value)
-            base_score = 0
-
-            # Check for 3 of a kind or greater
-            if count >= 3:
-                scoring_dice.append(value)
-                scoring_dice.append(value)
-                scoring_dice.append(value)
-
-                # Calculate base_score for 3 of a kind
-                if value == 1:
-                    base_score = 1000
-                    ones_and_fives_needed_for_hot_dice -= 3
-
-                else:
-                    base_score = 100 * value
-
-                if value == 5:
-                    ones_and_fives_needed_for_hot_dice -= 3
-
-                # Check for 4 of a kind
-                if count == 4:
-                    base_score = base_score * 2
-                    ones_and_fives_needed_for_hot_dice -= 4
-                    scoring_dice.append(value)
-
-                # Check for 5 of a kind
-                elif count == 5:
-                    base_score = base_score * 3
-                    ones_and_fives_needed_for_hot_dice -= 5
-                    scoring_dice.append(value)
-                    scoring_dice.append(value)
-
-                elif count == 6:
-                    base_score = base_score * 4
-                    hot_dice = True
-                    scoring_dice = dice_list
-
-                # Add to total score
-                score += base_score
-
-                # After scoring the value, remove it from the list of dice and repeat loop
-                for i in range(count):
-                    dice_list.remove(value)
-
-        for value in dice_list:
-            if value == 1:
-                score += 100
-                count_1_5 += 1
-                scoring_dice.append(value)
-            elif value == 5:
-                score += 50
-                count_1_5 += 1
-                scoring_dice.append(value)
-
-        # Compare to number of 1' and 5's needed for hot dice
-        if ones_and_fives_needed_for_hot_dice == count_1_5:
-            hot_dice = True
-
-        return hot_dice
-
-    def calculate_scoring_dice(dice):
-        """
-        Calculate the score based on the given list of dice.
-
-        Args:
-            dice (list[int]): A list of integers representing the values of the dice.
-
-        Returns:
-            int: The total score for the given dice.
-        """
-
-        # change input to list
-        dice_list = list(dice)
-
-        # initialize variables
-        hot_dice = False
-        ones_and_fives_needed_for_hot_dice = len(dice)
-        score = 0
-        count_1_5 = 0
-        scoring_dice = list()
-
-        # Handle the case where the dice list is empty.
-        if not dice_list:
-            return tuple(scoring_dice)
-
-        # Check for a straight.
-        if set(dice_list) == {1, 2, 3, 4, 5, 6}:
-            hot_dice = True
-            scoring_dice = dice_list
-            return tuple(scoring_dice)
-
-        # Check for three pairs.  Counts how many of each result there is.
-        # 3 pairs occurs if the count is 2 (i.e. pairs), and the length is 3 (i.e. 3 pairs)
-        value_counts = Counter(dice_list)
-        if len(value_counts) == 3 and all(count == 2 for count in value_counts.values()):
-            # score += 1500
-            hot_dice = True
-            scoring_dice = dice_list
-            return tuple(scoring_dice)
-
-        # Check for three-of-a-kind or higher.
-        # iterate through dice_list for each value.  Count how many there are.
-        for value in set(dice_list):
-            count = dice_list.count(value)
-            base_score = 0
-
-            # Check for 3 of a kind or greater
-            if count >= 3:
-                scoring_dice.append(value)
-                scoring_dice.append(value)
-                scoring_dice.append(value)
-
-                # Calculate base_score for 3 of a kind
-                if value == 1:
-                    base_score = 1000
-                    ones_and_fives_needed_for_hot_dice -= 3
-
-                else:
-                    base_score = 100 * value
-
-                if value == 5:
-                    ones_and_fives_needed_for_hot_dice -= 3
-
-                # Check for 4 of a kind
-                if count == 4:
-                    base_score = base_score * 2
-                    ones_and_fives_needed_for_hot_dice -= 4
-                    scoring_dice.append(value)
-
-                # Check for 5 of a kind
-                elif count == 5:
-                    base_score = base_score * 3
-                    ones_and_fives_needed_for_hot_dice -= 5
-                    scoring_dice.append(value)
-                    scoring_dice.append(value)
-
-                elif count == 6:
-                    base_score = base_score * 4
-                    hot_dice = True
-                    scoring_dice = dice_list
-
-                # Add to total score
-                score += base_score
-
-                # After scoring the value, remove it from the list of dice and repeat loop
-                for i in range(count):
-                    dice_list.remove(value)
-
-        for value in dice_list:
-            if value == 1:
-                score += 100
-                count_1_5 += 1
-                scoring_dice.append(value)
-            elif value == 5:
-                score += 50
-                count_1_5 += 1
-                scoring_dice.append(value)
-
-        # Compare to number of 1' and 5's needed for hot dice
-        if ones_and_fives_needed_for_hot_dice == count_1_5:
-            hot_dice = True
-
-        return tuple(scoring_dice)
-
-
-    @staticmethod
-    def roll_dice(num_dice):
-        """
-        Roll the specified number of dice and return the result as a tuple.
-
-        Args:
-            num_dice (int): The number of dice to roll.
-
-        Returns:
-            tuple[int]: The values of the rolled dice.
-        """
-        dice = [random.randint(1, 6) for _ in range(num_dice)]
-        return tuple(dice)
-
-    @staticmethod
-    def get_scorers(input_dice):
-        # input in tuple of dice
-        # output tuple of dice that are scoring dice
-        scorers = GameLogic.calculate_scoring_dice(input_dice)
-        return scorers
-
     @staticmethod
     def validate_keepers(roll, keepers):
-        valid_data = True
+        # version_3
 
-        roll_dict = GameLogic.count_dice(roll)
-        keepers_dict = GameLogic.count_dice(keepers)
+        # pro tip: you can do some math operations with counters
+        # check https://docs.python.org/3/library/collections.html#collections.Counter
+        keeper_counter = Counter(keepers)
+        roll_counter = Counter(roll)
 
-        for di_value in range(1, 7):
-            if keepers_dict[di_value] > roll_dict[di_value] or len(roll) == 0:
-                valid_data = False
+        # a "valid" result is an empty Counter result
+        result = keeper_counter - roll_counter
 
-        # if valid_data is False:
-        #     print('Cheater!!! Or possibly made a typo...')
-
-        return valid_data
+        # an empty Counter is falsy, so use "not" to flip it
+        return not result
 
     @staticmethod
-    def count_dice(dice_to_count):
-        # input is going to be a list of dice
-        # output is a dict of counts for each result
-        count = {
-            1: 0,
-            2: 0,
-            3: 0,
-            4: 0,
-            5: 0,
-            6: 0
-        }
-        for die in dice_to_count:
-            count[die] += 1
-        return count
+    def get_scorers(dice):
+        # version_3
 
-if __name__ == '__main__':
-    game = GameLogic()
-    my_dice = [3,2,3,1,1,2]
+        all_dice_score = GameLogic.calculate_score(dice)
 
-    scorers = game.get_scorers(my_dice)
+        if all_dice_score == 0:
+            return tuple()
 
-    print(scorers)
+        scorers = []
+
+        # for i in range(len(dice)):
+
+        for i, val in enumerate(dice):
+            sub_roll = dice[:i] + dice[i + 1 :]
+            sub_score = GameLogic.calculate_score(sub_roll)
+
+            if sub_score != all_dice_score:
+                scorers.append(val)
+
+        return tuple(scorers)
